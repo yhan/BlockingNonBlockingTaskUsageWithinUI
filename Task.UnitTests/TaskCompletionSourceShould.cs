@@ -2,10 +2,15 @@ using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using NFluent;
 using NUnit.Framework;
 
 namespace Tasks.UnitTests
 {
+
+    /// <summary>
+    /// References: https://blog.stephencleary.com/2012/12/dont-block-in-asynchronous-code.html
+    /// </summary>
     public class TaskCompletionSourceShould
     {
 
@@ -24,7 +29,7 @@ namespace Tasks.UnitTests
            13 : After blocking waiting, timeout?=True
            13 : End of story        */
 
-        static async Task Test()
+        static async Task<string> Test()
         {
             // Indicates the task has been started and is ready.
             var taskReady = new TaskCompletionSource<string>();
@@ -43,22 +48,24 @@ namespace Tasks.UnitTests
                 // Let the Test method know we've been started and are ready.
                 Dump("HTTP Sending ");
 
-                var responseOfGoogle = await googleClient.GetResponseFromGoogle();
+                var response = await googleClient.GetResponseFromGoogle();
 
                 Dump("HTTP Got response, Before setting result");
-                taskReady.SetResult(responseOfGoogle);
+                taskReady.SetResult(response);
                 Dump("Result set");
-                return responseOfGoogle;
+                return response;
 
             });
             // Block until the task is completed.
             Dump("Before blocking waiting");
+
             // Wait for the task to be started and ready.
-            //await taskReady.Task;
-            //var timeout = !task.Wait(TimeSpan.FromSeconds(5));
-            // Block until the task is completed.
-            task.Wait();
+            var responseOfGoogle = await taskReady.Task;
+            Check.That(responseOfGoogle).IsNotEmpty();
+            
             //Dump($"After blocking waiting, timeout?={timeout}");
+
+            return responseOfGoogle;
         }
 
         private static void Dump(string message)
@@ -72,7 +79,9 @@ namespace Tasks.UnitTests
         {
             //The deadlock is due to an optimization in the implementation of await:
             //an async method’s continuation is scheduled with TaskContinuationOptions.ExecuteSynchronously.
-            await Test();
+            
+            var responseOfGoogle = await Test();
+            Check.That(responseOfGoogle).StartsWith("<!doctype html>");
 
             Dump("End of story");
         }

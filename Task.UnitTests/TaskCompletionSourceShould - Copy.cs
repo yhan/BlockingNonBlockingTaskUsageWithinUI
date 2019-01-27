@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using NFluent;
 using NUnit.Framework;
 
 namespace Tasks.UnitTests
@@ -24,7 +25,7 @@ namespace Tasks.UnitTests
            13 : After blocking waiting, timeout?=True
            13 : End of story        */
 
-        static async Task Test()
+        static async Task<string> Test()
         {
             // Indicates the task has been started and is ready.
             var taskReady = new TaskCompletionSource<string>();
@@ -46,14 +47,15 @@ namespace Tasks.UnitTests
                 return responseOfGoogle;
 
             });
-            // Block until the task is completed.
+           
             Dump("Before blocking waiting");
             // Wait for the task to be started and ready.
             await taskReady.Task;
-            //var timeout = !task.Wait(TimeSpan.FromSeconds(5));
-            // Block until the task is completed.
-            task.Wait();
+
             //Dump($"After blocking waiting, timeout?={timeout}");
+
+            // Block until the task is completed.
+            return task.Result;
         }
 
         private static void Dump(string message)
@@ -67,7 +69,14 @@ namespace Tasks.UnitTests
         {
             //The deadlock is due to an optimization in the implementation of await:
             //an async method’s continuation is scheduled with TaskContinuationOptions.ExecuteSynchronously.
-            await Test();
+            Task<string> test = Test();
+
+            var taskAwaiter = test.GetAwaiter();
+
+            var notTimeout = test.Wait(TimeSpan.FromSeconds(1));
+
+            Check.That(notTimeout).IsFalse();
+            Check.That(taskAwaiter.IsCompleted).IsFalse();
 
             Dump("End of story");
         }
