@@ -21,11 +21,17 @@ namespace AsyncInLegacyUI
         private async void btnGet_Click(object sender, EventArgs e)
         {
             var googleClient = new GoogleClient();
-            /*OK => */
-            this.txtboxResponse.Text = await googleClient.GetResponseFromGoogle(TimeSpan.FromSeconds(5));
+            //UI thread WILL NOT BLOCK
+            //this.txtboxResponse.Text = await googleClient.GetResponseFromGoogle(TimeSpan.FromSeconds(5));
 
+            //UI thread WILL NOT BLOCK
             //var result = Task.Run<string>(() => { return googleClient.GetResponseFromGoogle(TimeSpan.FromSeconds(5)); })
             //    .Result;
+
+            //DEAD LOCK HERE: UI waiting for task to complete to render ui control,
+            //task need Windows message pump to continue(UI thread released) to be completed
+            var responseFromGoogle = googleClient.GetHttpResponseMessageFromGoogle();
+            var result = responseFromGoogle.Result;
 
             //txtboxResponse.Text = result;
         }

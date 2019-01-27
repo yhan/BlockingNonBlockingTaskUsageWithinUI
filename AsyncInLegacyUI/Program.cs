@@ -16,7 +16,7 @@ namespace AsyncInLegacyUI
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new FormNonBlockingWithTaskCompletionSourceWithinLegacy());
+            Application.Run(new FromUiBlocked());
         }
     }
 }

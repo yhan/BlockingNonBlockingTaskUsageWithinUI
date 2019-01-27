@@ -20,5 +20,21 @@ namespace AsyncInLegacyUI
 
             return content;
         }
+
+
+        public async Task<HttpResponseMessage> GetHttpResponseMessageFromGoogle(TimeSpan wait = default(TimeSpan))
+        {
+            var httpClient = new HttpClient()
+            {
+                BaseAddress = new Uri("http://www.google.com")
+            };
+
+            await Task.Delay(wait);
+
+            var response = await httpClient.GetAsync("");
+          
+
+            return response;
+        }
     }
 }

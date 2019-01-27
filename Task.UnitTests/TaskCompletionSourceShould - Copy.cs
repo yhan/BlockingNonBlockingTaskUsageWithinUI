@@ -35,10 +35,6 @@ namespace Tasks.UnitTests
             // Start the task, running on a thread pool thread.
             var task = Task.Run<string>(async () =>
             {
-
-                // Spend a bit of time getting ready.
-                await Task.Delay(TimeSpan.FromSeconds(0.5));
-
                 // Let the Test method know we've been started and are ready.
 
                 var responseOfGoogle = await googleClient.GetResponseFromGoogle();
@@ -48,13 +44,14 @@ namespace Tasks.UnitTests
 
             });
            
-            Dump("Before blocking waiting");
+       
             // Wait for the task to be started and ready.
             await taskReady.Task;
 
             //Dump($"After blocking waiting, timeout?={timeout}");
 
             // Block until the task is completed.
+            Dump("Before blocking waiting");
             return task.Result;
         }
 
@@ -69,13 +66,13 @@ namespace Tasks.UnitTests
         {
             //The deadlock is due to an optimization in the implementation of await:
             //an async method’s continuation is scheduled with TaskContinuationOptions.ExecuteSynchronously.
-            Task<string> test = Test();
+            Task<string> testTask = Test();
 
-            var taskAwaiter = test.GetAwaiter();
+            var taskAwaiter = testTask.GetAwaiter();
 
-            var notTimeout = test.Wait(TimeSpan.FromSeconds(1));
+            var timeout = !testTask.Wait(TimeSpan.FromSeconds(1));
 
-            Check.That(notTimeout).IsFalse();
+            Check.That(timeout).IsTrue();
             Check.That(taskAwaiter.IsCompleted).IsFalse();
 
             Dump("End of story");
